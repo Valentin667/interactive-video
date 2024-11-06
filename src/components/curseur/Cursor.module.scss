@@ -1,0 +1,12 @@
+.ball {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: white;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    z-index: 10;
+}
