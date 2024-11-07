@@ -1,23 +1,39 @@
-.menu {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
+/* Menu.module.scss */
+
+.menuContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: url('../../../public/images/menu-background.gif') no-repeat center center;
+    background-size: cover;
+    z-index: 999;
+  }
+  
+  .title {
+    font-family: 'ZTBrosOskon90s-Regular', sans-serif;
+    font-size: 3rem;
     color: white;
+    margin-bottom: 20px;
 }
 
-.startButton {
-    margin-top: 20px;
-    padding: 10px 20px;
-    font-size: 18px;
-    background-color: dodgerblue;
+.startText {
+    font-family: 'ZTBrosOskon90s-Regular', sans-serif;
+    font-size: 2rem;
     color: white;
-    border: none;
-    border-radius: 5px;
     cursor: pointer;
-}
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    position: relative;
 
-.startButton:hover {
-    background-color: darkblue;
+    &:hover {
+        color: #ff0000;
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+    }
 }

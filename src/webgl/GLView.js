@@ -60,7 +60,7 @@ class GLView {
     video.src = '/videos/video-intro.mp4';
     video.crossOrigin = 'anonymous';
     video.loop = true;
-    video.muted = true;
+    video.muted = false;
     video.load();
 
     video.addEventListener("loadedmetadata", () => {
