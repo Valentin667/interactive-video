@@ -1,7 +1,6 @@
 // GLView.js
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import gsap from 'gsap';
 
 class GLView {
@@ -37,10 +36,6 @@ class GLView {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.mountRef.current.appendChild(this.renderer.domElement);
 
-    this.css3DRenderer = new CSS3DRenderer();
-    this.css3DRenderer.setSize(window.innerWidth, window.innerHeight);
-    this.mountRef.current.appendChild(this.css3DRenderer.domElement);
-
     window.addEventListener('mousemove', this.onMouseMove.bind(this));
     window.addEventListener('click', this.onMouseClick.bind(this));
 
@@ -68,12 +63,13 @@ class GLView {
     this.animate();
   }
 
-  setupVideo(videoId = 'video') {
-    const video = document.getElementById(videoId);
+  setupVideo(videoUrl) {
+    const video = document.getElementById("video");
     this.video = video
+    if(videoUrl)video.src = videoUrl
     video.crossOrigin = 'anonymous';
     video.loop = false;
-    video.muted = false;
+    video.muted = true;
     video.load();
 
     video.addEventListener("loadedmetadata", () => {
@@ -230,26 +226,20 @@ class GLView {
         (xhr) => { /* Log de progression */ },
         (error) => { console.error('Erreur lors du chargement du modèle', error); }
     );
-    
-    // Créer un objet CSS3D à titre d'exemple
-    this.createCSS3DObject();
 }
-
-createCSS3DObject() {
-    const element = document.createElement('div');
-    element.className = 'css3d-object';
-    element.innerHTML = 'Cliquez ici!';
-    element.style.outline = "1px red solid"
-    
-    const object3D = new CSS3DObject(element);
-    object3D.position.set(0, 0, -5);
-    this.scene.add(object3D);
-    this.objects3D.push(object3D);
-  }
 
   onMouseMove(event) {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.getIntersections();
+
+    if (intersects.length > 0) {
+        document.body.style.cursor = 'pointer';
+    } else {
+        document.body.style.cursor = 'default';
+    }
   }
 
   onMouseClick(event) {
@@ -263,9 +253,7 @@ createCSS3DObject() {
     if (intersects.length > 0) {
       const object = intersects[0].object;
       console.log("Objet cliqué:", object);
-  
-      object.material.color.set(Math.random() * 0xffffff);
-      this.setupVideo('video-screen');
+      this.setupVideo("/videos/video-screen.mp4");
     }
 
   }
@@ -338,7 +326,6 @@ createCSS3DObject() {
       }
 
       this.renderer.render(this.scene, this.camera);
-      this.css3DRenderer.render(this.scene, this.camera);
 
       requestAnimationFrame(this.animate);
   }

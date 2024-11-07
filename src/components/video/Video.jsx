@@ -2,32 +2,34 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { VideoContext } from '../../context/VideoContext';
 import styles from './Video.module.scss';
 
-const Video = () => {
+const Video = ({ experienceStarted }) => {
     const { setCurrentTime } = useContext(VideoContext);
-    const [isPlaying, setIsPlaying] = useState(true);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1); // État pour gérer le volume
     const [currentTime, setCurrentTimeState] = useState(0); // État pour le temps écoulé
     const [duration, setDuration] = useState(0); // Durée totale de la vidéo
+    
     const videoRef = useRef();
+    const audioRef = useRef();
 
-    // Fonction pour mettre en pause ou démarrer la vidéo
     const togglePlayPause = () => {
         const video = videoRef.current;
+        const audio = audioRef.current;
         if (isPlaying) {
             video.pause();
+            audio.pause();
         } else {
             video.play();
+            audio.play();
         }
         setIsPlaying(!isPlaying);
     };
 
-    // Fonction pour avancer de 10 secondes
     const forward = () => {
         const video = videoRef.current;
         video.currentTime += 10;
     };
 
-    // Fonction pour revenir en arrière de 10 secondes
     const rewind = () => {
         const video = videoRef.current;
         video.currentTime -= 10;
@@ -37,38 +39,34 @@ const Video = () => {
         const video = videoRef.current;
         const newVolume = event.target.value;
         video.volume = newVolume;
+        audioRef.current.volume = newVolume;
         setVolume(newVolume);
     };
 
-    // Fonction pour gérer la barre de progression
     const handleProgressChange = (event) => {
         const video = videoRef.current;
         video.currentTime = event.target.value;
         setCurrentTimeState(video.currentTime);
     };
 
-    useEffect(() => {
+    useEffect(( experienceStarted ) => {
         const video = videoRef.current;
+        const audio = audioRef.current;
 
-        // Récupérer la durée totale de la vidéo
         const handleLoadedMetadata = () => {
             setDuration(video.duration);
         };
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
 
-        // Fonction pour mettre à jour le temps écoulé en continu
         const updateCurrentTime = () => {
             setCurrentTimeState(video.currentTime);
         };
 
-        // Met à jour la barre de progression toutes les 16ms (approximativement 60FPS)
         const interval = setInterval(updateCurrentTime, 16);
 
-        // Fonction pour gérer l'événement "keydown"
         const handleKeyPress = (event) => {
             if (event.code === 'Space') {
-                // Si la touche Espace est pressée, on toggle play/pause
                 event.preventDefault();
                 togglePlayPause();
             }
@@ -76,7 +74,6 @@ const Video = () => {
         
         window.addEventListener('keydown', handleKeyPress);
 
-        // Nettoyage de l'événement et des listeners
         return () => {
             clearInterval(interval);
             window.removeEventListener('keydown', handleKeyPress);
@@ -84,14 +81,24 @@ const Video = () => {
         };
     }, [isPlaying]);
 
+    useEffect(() => {
+        if (experienceStarted) {
+            const video = videoRef.current;
+            const audio = audioRef.current;
+            video.volume = 0;
+            video.play();
+            audio.play();
+            setIsPlaying(true);
+        }
+    }, [experienceStarted]);
+
     return (
         <div className={styles.videoContainer}>
-            <video ref={videoRef} style={{ display: 'none' }} id="video">
-                <source src="/videos/video-intro.mp4" />
-            </video>
-            <video ref={videoRef} style={{ display: 'none' }} id="video-screen">
-                <source src="/videos/video-screen.mp4" />
-            </video>
+            <video ref={videoRef} style={{ display: 'none' }} id="video" src="/videos/video-intro.mp4"></video>
+
+            {/* Audio */}
+            <audio ref={audioRef} src="/audio/audio.mp3" preload="auto" />
+
             <div className={styles.playerControls}>
                 {/* Image à gauche */}
                 <div className={styles.logo}>
@@ -131,17 +138,6 @@ const Video = () => {
                 <div className={styles.time}>
                     {Math.floor(currentTime)} / {Math.floor(duration)}
                 </div>
-
-                {/* Volume Control */}
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className={styles.volumeControl}
-                />
             </div>
         </div>
     );

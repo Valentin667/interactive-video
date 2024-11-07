@@ -39,7 +39,7 @@ function App() {
             <div className="layout">
               <Indications />
               <Scene />
-              <Video />
+              <Video experienceStarted={experienceStarted} />
             </div>
           </>
         )}

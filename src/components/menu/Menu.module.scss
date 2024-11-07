@@ -1,5 +1,3 @@
-/* Menu.module.scss */
-
 .menuContainer {
     position: fixed;
     top: 0;
@@ -8,32 +6,35 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     background: url('../../../public/images/menu-background.gif') no-repeat center center;
     background-size: cover;
     z-index: 999;
-  }
-  
-  .title {
-    font-family: 'ZTBrosOskon90s-Regular', sans-serif;
-    font-size: 3rem;
-    color: white;
-    margin-bottom: 20px;
 }
 
-.startText {
+.topText {
     font-family: 'ZTBrosOskon90s-Regular', sans-serif;
     font-size: 2rem;
     color: white;
-    cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 2px;
-    transition: all 0.3s ease;
-    position: relative;
+    position: absolute;
+    top: 20px;
+    text-align: center;
+    color: #ff0000;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+}
 
-    &:hover {
-        color: #ff0000;
-        text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+/* Container du GIF centré */
+.gifContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+        width: 50%;
+        height: auto;
+        cursor: pointer;
     }
 }
