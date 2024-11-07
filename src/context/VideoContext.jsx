@@ -13,7 +13,6 @@ const VideoProvider = ({ children }) => {
     const [currentTime, setCurrentTime] = useState(null);
 
     useEffect(() => {
-        console.log("video", currentTime);
     },[currentTime])
 
     const togglePlayPause = () => {

@@ -1,4 +1,3 @@
-// Video.jsx
 import { useContext, useEffect, useRef, useState } from 'react';
 import styles from './Indications.module.scss';
 

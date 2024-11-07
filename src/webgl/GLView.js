@@ -1,16 +1,21 @@
 // GLView.js
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer';
 import gsap from 'gsap';
 
 class GLView {
   constructor(mountRef, videoRef) {
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
     this.mountRef = mountRef;
     this.videoRef = videoRef;
     this.renderer = null;
     this.scene = null;
     this.camera = null;
     this.modelRef = null;
+    this.marioKartRef = null;
+    this.spiderRef = null;
     this.videoTexture = null;
     this.ambientLight = null;
     this.directionalLight = null;
@@ -18,7 +23,9 @@ class GLView {
     this.isLoading = true;
     this.paused = true;
     this.videoAspectRatio = 1;
-    this.video = null
+    this.video = null;
+    this.modelVisible = false;
+    this.objects3D = [];
     this.init()
   }
 
@@ -29,6 +36,13 @@ class GLView {
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.mountRef.current.appendChild(this.renderer.domElement);
+
+    this.css3DRenderer = new CSS3DRenderer();
+    this.css3DRenderer.setSize(window.innerWidth, window.innerHeight);
+    this.mountRef.current.appendChild(this.css3DRenderer.domElement);
+
+    window.addEventListener('mousemove', this.onMouseMove.bind(this));
+    window.addEventListener('click', this.onMouseClick.bind(this));
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -54,12 +68,11 @@ class GLView {
     this.animate();
   }
 
-  setupVideo() {
-    const video = document.getElementById('video');
+  setupVideo(videoId = 'video') {
+    const video = document.getElementById(videoId);
     this.video = video
-    video.src = '/videos/video-intro.mp4';
     video.crossOrigin = 'anonymous';
-    video.loop = true;
+    video.loop = false;
     video.muted = false;
     video.load();
 
@@ -149,7 +162,8 @@ class GLView {
         uTexture: { value: null },
         uScreenSize: { value: new THREE.Vector2() },
         uVideoSize: { value: new THREE.Vector2() }
-      }
+      },
+      depthTest: false
     });
 
     this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -164,10 +178,10 @@ class GLView {
   loadModel() {
     const loader = new GLTFLoader();
     loader.load(
-      '/models/fifa_texture_jaquette.glb',
+      '/models/fifa.glb',
       (gltf) => {
         const model = gltf.scene;
-        model.position.z = 3;
+        model.position.set(0, -2, 3);
         model.rotation.y = -Math.PI / 2;
         this.scene.add(model);
         this.modelRef = model;
@@ -175,23 +189,112 @@ class GLView {
 
         this.modelRef.visible = false;
         this.createTimeline();
+        this.objects3D.push(this.modelRef);
       },
-      (xhr) => {
-        // Log de progression
-      },
-      (error) => {
-        console.error('Erreur lors du chargement du modèle', error);
-      }
+      (xhr) => { /* Log de progression */ },
+      (error) => { console.error('Erreur lors du chargement du modèle', error); }
     );
+    
+    loader.load(
+        '/models/mario_kart.glb',
+        (gltf) => {
+          const model = gltf.scene;
+          model.position.set(-2, -2, 3);
+          model.rotation.y = -Math.PI / 2;
+          this.scene.add(model);
+          this.marioKartRef = model;
+          this.isLoading = false;
+
+          this.marioKartRef.visible = false;
+          this.createTimeline();
+          this.objects3D.push(this.marioKartRef);
+        },
+        (xhr) => { /* Log de progression */ },
+        (error) => { console.error('Erreur lors du chargement du modèle', error); }
+    );
+
+    loader.load(
+        '/models/spiderspider.glb',
+        (gltf) => {
+          const model = gltf.scene;
+          model.position.set(2, -2, 3);
+          model.rotation.y = -Math.PI / 2;
+          this.scene.add(model);
+          this.spiderRef = model;
+          this.isLoading = false;
+
+          this.spiderRef.visible = false;
+          this.createTimeline();
+          this.objects3D.push(this.spiderRef);
+        },
+        (xhr) => { /* Log de progression */ },
+        (error) => { console.error('Erreur lors du chargement du modèle', error); }
+    );
+    
+    // Créer un objet CSS3D à titre d'exemple
+    this.createCSS3DObject();
+}
+
+createCSS3DObject() {
+    const element = document.createElement('div');
+    element.className = 'css3d-object';
+    element.innerHTML = 'Cliquez ici!';
+    element.style.outline = "1px red solid"
+    
+    const object3D = new CSS3DObject(element);
+    object3D.position.set(0, 0, -5);
+    this.scene.add(object3D);
+    this.objects3D.push(object3D);
+  }
+
+  onMouseMove(event) {
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  }
+
+  onMouseClick(event) {
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+  
+    const intersects = this.getIntersections();
+  
+    if (intersects.length > 0) {
+      const object = intersects[0].object;
+      console.log("Objet cliqué:", object);
+  
+      object.material.color.set(Math.random() * 0xffffff);
+      this.setupVideo('video-screen');
+    }
+
+  }
+  
+  getIntersections() {
+    return this.raycaster.intersectObjects(this.objects3D, true);
   }
 
   createTimeline() {
     if (!this.modelRef) return;
+    if (!this.marioKartRef) return;
+    if (!this.spiderRef) return;
 
     this.timeline = gsap.timeline({ paused: true });
     this.timeline.to(this.modelRef.position, {
-        duration: 2,
-        z: 0, // Déplace l'objet à sa position finale
+        duration: 1,
+        y : 1,
+        ease: 'power2.inOut',
+      });
+
+      this.timeline.to(this.marioKartRef.position, {
+        duration: 1,
+        y : 1,
+        ease: 'power2.inOut',
+      });
+
+      this.timeline.to(this.spiderRef.position, {
+        duration: 1,
+        y : 1,
         ease: 'power2.inOut',
       });
   }
@@ -199,17 +302,25 @@ class GLView {
   animate = (time) => {
     if (this.paused) return;
 
-      if (this.plane) {
-        this.plane.material.uniforms.uTime.value = time * 0.001;
-      }
+    //   if (this.plane) {
+    //     this.plane.material.uniforms.uTime.value = time * 0.001;
+    //   }
 
     //   if (this.videoRef.current.currentTime >= 10 && !this.modelVisible) {
     //     this.modelVisible = true;
     //     this.modelRef.visible = true;
     //     this.timeline.play();
     //   }
-      if (this.video) {
-        console.log(this.video.currentTime)
+    //   if (this.video) {
+    //     console.log(this.video.currentTime)
+    //   }
+
+      if (this.video.currentTime >= 25 && !this.modelVisible) {
+        this.modelVisible = true;
+        this.modelRef.visible = true;
+        this.marioKartRef.visible = true;
+        this.spiderRef.visible = true;
+        this.timeline.play();
       }
 
       this.videoTexture.needsUpdate = true;
@@ -218,7 +329,17 @@ class GLView {
         this.modelRef.rotation.y += 0.01;
       }
 
+      if (this.marioKartRef) {
+        this.marioKartRef.rotation.y += 0.01;
+      }
+
+      if (this.spiderRef) {
+        this.spiderRef.rotation.y += 0.01;
+      }
+
       this.renderer.render(this.scene, this.camera);
+      this.css3DRenderer.render(this.scene, this.camera);
+
       requestAnimationFrame(this.animate);
   }
 
