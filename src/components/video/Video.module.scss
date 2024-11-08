@@ -1,3 +1,24 @@
+.indications {
+    position: absolute;
+    width: 100%;
+    height: 4rem;
+    text-align: center;
+    background-color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    padding: 0;
+    margin: 0;
+}
+
+.text {
+    font-family: 'ZTBrosOskon90s-Regular', sans-serif;
+    font-size: 2rem;
+    color: red;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+}
+
 .videoContainer {
     position: relative;
     width: 100%;
@@ -100,6 +121,7 @@ button {
     text-align: center;
     color: #B20000;
     font-weight: 500;
+    font-family: 'terminal-grotesque', sans-serif;
 }
 
 .volumeControl {

@@ -1,6 +1,13 @@
 @font-face {
   font-family: 'ZTBrosOskon90s-Regular';
-  src: url('../public/fonts//ZTBrosOskon90s-Regular.otf') format('opentype');
+  src: url('../public/fonts/ZTBrosOskon90s-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'terminal-grotesque';
+  src: url('../public/fonts/terminal-grotesque.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

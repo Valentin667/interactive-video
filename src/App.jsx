@@ -37,7 +37,7 @@ function App() {
             {/* Afficher le loader pendant 2 secondes */}
             {/* {isLoading && <Loader />} */}
             <div className="layout">
-              <Indications />
+              {/* <Indications /> */}
               <Scene />
               <Video experienceStarted={experienceStarted} />
             </div>

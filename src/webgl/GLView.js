@@ -25,6 +25,7 @@ class GLView {
     this.video = null;
     this.modelVisible = false;
     this.objects3D = [];
+    this.planeAt25s = null;
     this.init()
   }
 
@@ -65,26 +66,36 @@ class GLView {
 
   setupVideo(videoUrl) {
     const video = document.getElementById("video");
-    this.video = video
-    if(videoUrl)video.src = videoUrl
-    video.crossOrigin = 'anonymous';
-    video.loop = false;
-    video.muted = true;
-    video.load();
+  this.video = video;
 
-    video.addEventListener("loadedmetadata", () => {
-    this.plane.material.uniforms.uTexture.value = this.videoTexture
-    this.plane.material.uniforms.uVideoSize.value.set(video.videoWidth, video.videoHeight)
-    video.play().catch((error) => {
-        console.error("Erreur de démarrage automatique :", error);
-      });
-    });
-
-    this.videoTexture = new THREE.VideoTexture(video);
-    this.videoTexture.minFilter = THREE.LinearFilter;
-    this.videoTexture.magFilter = THREE.LinearFilter;
-    this.videoTexture.format = THREE.RGBAFormat;
+  if (videoUrl) {
+    video.src = videoUrl;
   }
+  
+  video.crossOrigin = 'anonymous';
+  video.loop = false;
+  video.muted = false;
+  video.volume = 1;
+  video.load();
+
+  // Attendre que les métadonnées de la vidéo soient chargées
+  video.addEventListener("loadedmetadata", () => {
+    // Mettre à jour la texture vidéo
+    this.plane.material.uniforms.uTexture.value = this.videoTexture;
+    this.plane.material.uniforms.uVideoSize.value.set(video.videoWidth, video.videoHeight);
+    
+    // Démarrer la vidéo
+    video.play().catch((error) => {
+      console.error("Erreur de démarrage automatique :", error);
+    });
+  });
+
+  // Créer une texture vidéo à partir de l'élément vidéo
+  this.videoTexture = new THREE.VideoTexture(video);
+  this.videoTexture.minFilter = THREE.LinearFilter;
+  this.videoTexture.magFilter = THREE.LinearFilter;
+  this.videoTexture.format = THREE.RGBAFormat;
+}
 
   setupPlane() {
     const planeGeometry = new THREE.PlaneGeometry(2, 2);
@@ -177,7 +188,7 @@ class GLView {
       '/models/fifa.glb',
       (gltf) => {
         const model = gltf.scene;
-        model.position.set(0, -2, 3);
+        model.position.set(0, -4, 3);
         model.rotation.y = -Math.PI / 2;
         this.scene.add(model);
         this.modelRef = model;
@@ -195,7 +206,7 @@ class GLView {
         '/models/mario_kart.glb',
         (gltf) => {
           const model = gltf.scene;
-          model.position.set(-2, -2, 3);
+          model.position.set(-4, 0, 3);
           model.rotation.y = -Math.PI / 2;
           this.scene.add(model);
           this.marioKartRef = model;
@@ -213,7 +224,7 @@ class GLView {
         '/models/spiderspider.glb',
         (gltf) => {
           const model = gltf.scene;
-          model.position.set(2, -2, 3);
+          model.position.set(4, 0, 3);
           model.rotation.y = -Math.PI / 2;
           this.scene.add(model);
           this.spiderRef = model;
@@ -227,6 +238,43 @@ class GLView {
         (error) => { console.error('Erreur lors du chargement du modèle', error); }
     );
 }
+
+onVideoTimeUpdate() {
+    // Si la vidéo atteint 25 secondes, afficher le plane
+    if (this.video.currentTime >= 25 && !this.planeAt25s) {
+      this.showPlaneAt25s();
+    }
+  }
+  
+  showPlaneAt25s() {
+    // Créez un autre "plane" qui sera visible lorsque la vidéo atteint 25 secondes
+    const planeGeometry = new THREE.PlaneGeometry(2, 2);
+    const planeMaterial = new THREE.MeshBasicMaterial({
+      map: this.videoTexture,
+      transparent: true,
+    });
+  
+    this.planeAt25s = new THREE.Mesh(planeGeometry, planeMaterial);
+    this.planeAt25s.position.set(0, 0, -5);
+    this.scene.add(this.planeAt25s);
+
+    console.log("Le plane a été affiché à 25 secondes.");
+  
+    // Ajouter un gestionnaire de clic pour changer la vidéo quand on clique sur le "plane"
+    this.planeAt25s.addEventListener("click", this.onPlaneClick.bind(this));
+  }
+  
+  onPlaneClick() {
+    // Lorsque l'on clique sur le "plane", changer la vidéo
+    const newVideoUrl = "/videos/video-screen-mario.mp4"; // Exemple de nouvelle vidéo
+    this.setupVideo(newVideoUrl); // Recharger la vidéo avec la nouvelle URL
+  
+    // Enlever le plane une fois que la vidéo a changé
+    if (this.planeAt25s) {
+      this.scene.remove(this.planeAt25s);
+      this.planeAt25s = null;
+    }
+  }
 
   onMouseMove(event) {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -252,10 +300,32 @@ class GLView {
   
     if (intersects.length > 0) {
       const object = intersects[0].object;
-      console.log("Objet cliqué:", object);
-      this.setupVideo("/videos/video-screen.mp4");
-    }
+      this.objects3D.forEach(object => {
+        gsap.killTweensOf(object.position);
 
+        gsap.to(object.position, {
+          duration: 1,
+          y: -10,
+          ease: "power2.inOut",
+          onComplete: () => {
+            object.visible = false;
+          }
+        });
+      });
+      console.log("Objet cliqué:", object);
+      this.setupVideo("/videos/video-screen-fifa.mp4");
+      
+    //   if (object === this.modelRef) {
+    //     console.log("Changement de vidéo vers FIFA");
+    //     this.setupVideo("/videos/video-screen-fifa.mp4");
+    //   } else if (object === this.marioKartRef) {
+    //     console.log("Changement de vidéo vers Mario Kart");
+    //     this.setupVideo("/videos/video-screen-mario.mp4");
+    //   } else if (object === this.spiderRef) {
+    //     console.log("Changement de vidéo vers Spider");
+    //     this.setupVideo("/videos/video-screen-spider.mp4");
+    //   }
+    }
   }
   
   getIntersections() {
@@ -263,28 +333,46 @@ class GLView {
   }
 
   createTimeline() {
-    if (!this.modelRef) return;
-    if (!this.marioKartRef) return;
-    if (!this.spiderRef) return;
+    if (!this.modelRef || !this.marioKartRef || !this.spiderRef) return;
 
     this.timeline = gsap.timeline({ paused: true });
     this.timeline.to(this.modelRef.position, {
-        duration: 1,
-        y : 1,
+        duration: 0.5,
+        y: 0,  // Position finale
         ease: 'power2.inOut',
-      });
+        onComplete: () => {
+          this.floatObject(this.modelRef);  // Lancer le flottement après l'animation
+        }
+      });    
 
       this.timeline.to(this.marioKartRef.position, {
-        duration: 1,
-        y : 1,
+        duration: 0.5,
+        x: -1.6,  // Position finale
         ease: 'power2.inOut',
+        onComplete: () => {
+          this.floatObject(this.marioKartRef);  // Lancer le flottement après l'animation
+        }
       });
 
       this.timeline.to(this.spiderRef.position, {
-        duration: 1,
-        y : 1,
+        duration: 0.5,
+        x: 1.6,  // Position finale
         ease: 'power2.inOut',
+        onComplete: () => {
+          this.floatObject(this.spiderRef);  // Lancer le flottement après l'animation
+        }
       });
+    }
+
+  floatObject(object) {
+    // Animer la position de l'objet pour qu'il flotte sur l'axe Y
+    gsap.to(object.position, {
+      y: "+=0.1", // Flottement léger
+      duration: 1,
+      repeat: -1,  // Répéter indéfiniment
+      yoyo: true,  // Faire l'oscillation (rebondir)
+      ease: "sine.inOut",  // Utilisation d'un easing sinusoïdal pour l'effet flottant
+    });
   }
 
   animate = (time) => {
@@ -303,7 +391,7 @@ class GLView {
     //     console.log(this.video.currentTime)
     //   }
 
-      if (this.video.currentTime >= 25 && !this.modelVisible) {
+      if (this.video.currentTime >= 26 && !this.modelVisible) {
         this.modelVisible = true;
         this.modelRef.visible = true;
         this.marioKartRef.visible = true;
@@ -312,18 +400,6 @@ class GLView {
       }
 
       this.videoTexture.needsUpdate = true;
-
-      if (this.modelRef) {
-        this.modelRef.rotation.y += 0.01;
-      }
-
-      if (this.marioKartRef) {
-        this.marioKartRef.rotation.y += 0.01;
-      }
-
-      if (this.spiderRef) {
-        this.spiderRef.rotation.y += 0.01;
-      }
 
       this.renderer.render(this.scene, this.camera);
 

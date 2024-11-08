@@ -8,9 +8,15 @@ const Video = ({ experienceStarted }) => {
     const [volume, setVolume] = useState(1); // État pour gérer le volume
     const [currentTime, setCurrentTimeState] = useState(0); // État pour le temps écoulé
     const [duration, setDuration] = useState(0); // Durée totale de la vidéo
+    const [showIndication, setShowIndication] = useState(false); 
+    const [hasIndicationBeenShown, setHasIndicationBeenShown] = useState(false);
     
     const videoRef = useRef();
     const audioRef = useRef();
+
+    const resetIndication = () => {
+        setShowIndication(false);
+    };
 
     const togglePlayPause = () => {
         const video = videoRef.current;
@@ -53,6 +59,10 @@ const Video = ({ experienceStarted }) => {
         const video = videoRef.current;
         const audio = audioRef.current;
 
+        const newTime = video.currentTime;
+            setCurrentTimeState(newTime);
+            setCurrentTime(newTime);
+
         const handleLoadedMetadata = () => {
             setDuration(video.duration);
         };
@@ -61,6 +71,17 @@ const Video = ({ experienceStarted }) => {
 
         const updateCurrentTime = () => {
             setCurrentTimeState(video.currentTime);
+            setCurrentTime(video.currentTime);
+
+            if (video.currentTime >= 26 && video.currentTime < 27 && !hasIndicationBeenShown) {
+                // Afficher l'indication
+                setShowIndication(true);
+                setHasIndicationBeenShown(true); // Assurez-vous que l'indication ne s'affiche qu'une seule fois
+
+                setTimeout(() => {
+                    setShowIndication(false);
+                }, 5000);
+            }
         };
 
         const interval = setInterval(updateCurrentTime, 16);
@@ -79,13 +100,13 @@ const Video = ({ experienceStarted }) => {
             window.removeEventListener('keydown', handleKeyPress);
             video.removeEventListener('loadedmetadata', handleLoadedMetadata);
         };
-    }, [isPlaying]);
+    }, [isPlaying, hasIndicationBeenShown]);
 
     useEffect(() => {
         if (experienceStarted) {
             const video = videoRef.current;
             const audio = audioRef.current;
-            video.volume = 0;
+            video.volume = 1;
             video.play();
             audio.play();
             setIsPlaying(true);
@@ -93,7 +114,14 @@ const Video = ({ experienceStarted }) => {
     }, [experienceStarted]);
 
     return (
-        <div className={styles.videoContainer}>
+        <>
+            {/* Indication */}
+                <div className={styles.indications}>
+                    {showIndication && (
+                        <p className={styles.text}>Clique pour choisir un jeu</p>
+                    )}
+                </div>
+            <div className={styles.videoContainer}>
             <video ref={videoRef} style={{ display: 'none' }} id="video" src="/videos/video-intro.mp4"></video>
 
             {/* Audio */}
@@ -140,6 +168,7 @@ const Video = ({ experienceStarted }) => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 
