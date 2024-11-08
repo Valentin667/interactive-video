@@ -125,7 +125,7 @@ const Video = ({ experienceStarted }) => {
             <video ref={videoRef} style={{ display: 'none' }} id="video" src="/videos/video-intro.mp4"></video>
 
             {/* Audio */}
-            <audio ref={audioRef} src="/audio/audio.mp3" preload="auto" />
+            <audio ref={audioRef} src="/audio/audio.mp3" preload="auto" loop />
 
             <div className={styles.playerControls}>
                 {/* Image à gauche */}
