@@ -192,7 +192,14 @@ class GLView {
         model.rotation.y = -Math.PI / 2;
         this.scene.add(model);
         this.modelRef = model;
+        model.name = "fifa"
         this.isLoading = false;
+
+        // model.traverse((ob) => {
+        //     if (ob.isMesh) {
+        //         ob.name = "fifa"
+        //     }
+        // })
 
         this.modelRef.visible = false;
         this.createTimeline();
@@ -211,6 +218,7 @@ class GLView {
           this.scene.add(model);
           this.marioKartRef = model;
           this.isLoading = false;
+          model.name = "mario"
 
           this.marioKartRef.visible = false;
           this.createTimeline();
@@ -229,6 +237,7 @@ class GLView {
           this.scene.add(model);
           this.spiderRef = model;
           this.isLoading = false;
+          model.name = "spider"
 
           this.spiderRef.visible = false;
           this.createTimeline();
@@ -312,19 +321,16 @@ onVideoTimeUpdate() {
           }
         });
       });
-      console.log("Objet cliqué:", object);
-      this.setupVideo("/videos/video-screen-fifa.mp4");
+      console.log("Objet cliqué:", object.name, object.parent?.name);
+    //   this.setupVideo("/videos/video-screen-fifa.mp4");
       
-    //   if (object === this.modelRef) {
-    //     console.log("Changement de vidéo vers FIFA");
-    //     this.setupVideo("/videos/video-screen-fifa.mp4");
-    //   } else if (object === this.marioKartRef) {
-    //     console.log("Changement de vidéo vers Mario Kart");
-    //     this.setupVideo("/videos/video-screen-mario.mp4");
-    //   } else if (object === this.spiderRef) {
-    //     console.log("Changement de vidéo vers Spider");
-    //     this.setupVideo("/videos/video-screen-spider.mp4");
-    //   }
+      if (object.parent.name === this.modelRef.name) {
+        this.setupVideo("/videos/video-screen-fifa.mp4");
+      } else if (object.parent.name === this.marioKartRef.name) {
+        this.setupVideo("/videos/video-screen-mario.mp4");
+      } else if (object.parent.name === this.spiderRef.name) {
+        this.setupVideo("/videos/video-screen-spider.mp4");
+      }
     }
   }
   
